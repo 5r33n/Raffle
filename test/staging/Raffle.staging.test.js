@@ -1,7 +1,6 @@
 const { getNamedAccounts, ethers, network } = require("hardhat")
-const { developmentChains, networkConfig } = require("../../helper-hardhat-config")
+const { developmentChains } = require("../../helper-hardhat-config")
 const { assert, expect } = require("chai")
-const { isCallTrace } = require("hardhat/internal/hardhat-network/stack-traces/message-trace")
 
 developmentChains.includes(network.name)
     ? describe.skip
@@ -16,6 +15,8 @@ developmentChains.includes(network.name)
 
           describe("fulfillRandomWords", function () {
               it("works with live Chainlink Keepers and Chainlink VRF, we get a random winner", async function () {
+                  console.log("Setting up test...")
+
                   const startingTimeStamp = await raffle.getLatestTimeStamp()
                   const accounts = await ethers.getSigners()
 
@@ -46,7 +47,10 @@ developmentChains.includes(network.name)
                           }
 
                           // then enter
-                          await raffle.enterRaffle({ value: raffleEntranceFee })
+                          console.log("Entering Raffle...")
+                          const tx = await raffle.enterRaffle({ value: raffleEntranceFee })
+                          await tx.wait(1)
+                          console.log("wait...")
                           const winnerStartingBalance = await accounts[0].getBalance()
                       })
                   })
