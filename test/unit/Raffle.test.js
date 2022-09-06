@@ -150,20 +150,31 @@ const { assert, expect } = require("chai")
                   await new Promise(async (resolve, reject) => {
                       // listen for event 'WinnerPicked'
                       raffle.once("WinnerPicked", async () => {
-                          console.log("Found the event!")
+                          //   console.log("Found the event!")
                           try {
                               const recentWinner = await raffle.getRecentWinner()
-                              console.log("recent winner:", recentWinner.address)
-                              console.log("[0] deployer:", accounts[0].address)
-                              console.log("[1]", accounts[1].address)
-                              console.log("[2]", accounts[2].address)
-                              console.log("[3]", accounts[3].address)
+                              //   console.log("recent winner:", recentWinner)
+                              //   console.log("[0] deployer:", accounts[0].address)
+                              //   console.log("[1]", accounts[1].address)
+                              //   console.log("[2]", accounts[2].address)
+                              //   console.log("[3]", accounts[3].address)
                               const raffleState = await raffle.getRaffleState()
                               const endingTimeStamp = await raffle.getLatestTimeStamp()
                               const numPlayers = await raffle.getNumberOfPlayers()
+                              const winnerEndingBalance = await accounts[1].getBalance()
                               assert(numPlayers.toString(), "0")
                               assert(raffleState.toString(), "0")
                               assert(endingTimeStamp > startingTimeStamp)
+                              assert.equal(
+                                  winnerEndingBalance.toString(),
+                                  winnerStartingBalance
+                                      .add(
+                                          raffleEntranceFee
+                                              .mul(additionalEntrants)
+                                              .add(raffleEntranceFee)
+                                      )
+                                      .toString()
+                              )
                           } catch (e) {
                               reject(e)
                           }
@@ -174,6 +185,7 @@ const { assert, expect } = require("chai")
                       // chainlink keepers mock
                       const tx = await raffle.performUpkeep([])
                       const txReceipt = await tx.wait(1)
+                      const winnerStartingBalance = await accounts[1].getBalance()
                       // chainlink vrf mock
                       await vrfCoordinatorV2Mock.fulfillRandomWords(
                           txReceipt.events[1].args.requestId,
